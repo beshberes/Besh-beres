@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>بش برس - هوش مصنوعی فارسی</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .chat-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .message { margin: 10px 0; padding: 10px; border-radius: 10px; }
+        .user-message { background-color: #e3f2fd; text-align: left; }
+        .ai-message { background-color: #f3e5f5; text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>🤖 بش برس - هوش مصنوعی فارسی</h1>
+        <div id="chat-box"></div>
+        <input type="text" id="message-input" placeholder="پیام خود را وارد کنید...">
+        <button onclick="sendMessage()">ارسال</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value;
+            input.value = '';
+            
+            // نمایش پیام کاربر
+            displayMessage(message, 'user');
+            
+            // ارسال به سرور
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+            
+            const data = await response.json();
+            displayMessage(data.response, 'ai');
+        }
+        
+        function displayMessage(text, sender) {
+            const chatBox = document.getElementById('chat-box');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+        }
+    </script>
+</body>
+</html>

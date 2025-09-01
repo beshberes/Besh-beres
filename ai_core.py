@@ -1,5 +1,6 @@
 import nltk
 from nltk.tokenize import word_tokenize
+from database import DatabaseManager
 from nltk.stem import PorterStemmer
 import json
 import numpy as np
@@ -7,8 +8,9 @@ import numpy as np
 nltk.download('punkt')
 
 class BeshBeresAI:
-    def __init__(self, data_file="memory.json"):
+    def __init__(self, data_file="memory.json", db_name="besh_beres.db"):
         self.data_file = data_file
+        self.db = DatabaseManager(db_name)
         self.knowledge = self.load_memory()
     
     def load_memory(self):
@@ -17,11 +19,16 @@ class BeshBeresAI:
                 return json.load(f)
         except FileNotFoundError:
             return {}
-    
+        """بارگذاری حافظه از دیتابیس"""
+        return self.db.load_knowledge()
+
     def save_memory(self):
         with open(self.data_file, 'w', encoding='utf-8') as f:
             json.dump(self.knowledge, f, ensure_ascii=False, indent=4)
-   
+        """ذخیره حافظه در دیتابیس"""
+        for question, answer in self.knowledge.items():
+            self.db.save_knowledge(question, answer)
+
     def ethical_check(self, text):
         banned_words = ["تنفر", "خشونت", "آزار", "نفرت"]
         for word in banned_words:
@@ -36,11 +43,21 @@ class BeshBeresAI:
             print("یاد گرفتم! ✅")
         else:
             print("این پاسخ با قوانین اخلاقی ما مغایرت دارد! ❌")
+        """یادگیری پاسخ جدید"""
+        self.knowledge[question] = answer
+        self.save_memory()
+        print("✅ یاد گرفتم!")
     
     def respond(self, user_input):
         tokens = word_tokenize(user_input)
         for key in self.knowledge:
             if any(word in key for word in tokens):
+                return self.knowledge[key]
+        return "هنوز یاد نگرفتم. به من یاد بده."
+        """پاسخ به کاربر"""
+        tokens = word_tokenize(user_input.lower())
+        for key in self.knowledge:
+            if any(word in key.lower() for word in tokens):
                 return self.knowledge[key]
         return "هنوز یاد نگرفتم. به من یاد بده."
 
